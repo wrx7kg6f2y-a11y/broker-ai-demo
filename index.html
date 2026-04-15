@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broker AI - 经纪人AI助手</title>
+<style>
+/* ── Reset & Base ──────────────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","SF Pro Text","Helvetica Neue",sans-serif;
+  color:#1a1a1a;background:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+
+/* ── Variables ─────────────────────────────────────────────────────────── */
+:root{
+  --accent:#007AFF;--accent-dark:#0062CC;--navy:#1A3C6E;
+  --bg-app:#f5f5f7;--bg-sidebar:#ebebec;
+  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;
+  --gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;
+  --gray-800:#1f2937;--gray-900:#111827;
+  --green:#22c55e;--amber:#f59e0b;--red:#ef4444;--purple:#a855f7;--indigo:#6366f1;
+  --radius:12px;--radius-sm:8px;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,#0a1628 0%,#1A3C6E 40%,#2E6DA4 100%);
+  color:#fff;text-align:center;padding:60px 24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(circle at 30% 40%,rgba(0,122,255,.12) 0%,transparent 50%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);
+  backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);border-radius:20px;
+  padding:6px 16px;font-size:13px;color:rgba(255,255,255,.85);margin-bottom:32px}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-size:clamp(36px,6vw,64px);font-weight:700;letter-spacing:-.02em;line-height:1.1;margin-bottom:16px}
+.hero h1 span{background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero .subtitle{font-size:clamp(16px,2.5vw,22px);color:rgba(255,255,255,.7);max-width:640px;line-height:1.6;margin-bottom:40px}
+.hero-cta{display:inline-flex;align-items:center;gap:8px;background:#007AFF;color:#fff;
+  border-radius:10px;padding:14px 32px;font-size:16px;font-weight:600;cursor:pointer;
+  transition:transform .15s,box-shadow .15s;border:none}
+.hero-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,122,255,.35)}
+.scroll-hint{position:absolute;bottom:32px;color:rgba(255,255,255,.4);font-size:13px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;animation:bob 2s infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+
+/* ── Section base ─────────────────────────────────────────────────────── */
+.section{padding:80px 24px;max-width:1200px;margin:0 auto}
+.section-label{font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;
+  letter-spacing:.08em;margin-bottom:8px}
+.section-title{font-size:clamp(28px,4vw,40px);font-weight:700;color:var(--gray-900);margin-bottom:16px}
+.section-desc{font-size:17px;color:var(--gray-500);max-width:640px;line-height:1.7;margin-bottom:48px}
+
+/* ── Feature Grid ─────────────────────────────────────────────────────── */
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px}
+.feature-card{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);
+  padding:28px;transition:transform .2s,box-shadow .2s}
+.feature-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.08)}
+.feature-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:16px}
+.feature-card h3{font-size:17px;font-weight:600;margin-bottom:8px;color:var(--gray-900)}
+.feature-card p{font-size:14px;color:var(--gray-500);line-height:1.6}
+
+/* icon backgrounds */
+.ic-crm{background:#dbeafe;color:#2563eb}
+.ic-ai{background:#ede9fe;color:#7c3aed}
+.ic-mat{background:#fef3c7;color:#d97706}
+.ic-pol{background:#d1fae5;color:#059669}
+.ic-task{background:#fce7f3;color:#db2777}
+.ic-set{background:#f3f4f6;color:#4b5563}
+
+/* ── App Mockup ───────────────────────────────────────────────────────── */
+.mockup-section{background:var(--bg-app);padding:80px 24px}
+.mockup-wrap{max-width:1100px;margin:0 auto}
+.mockup-frame{background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.12),0 0 0 1px rgba(0,0,0,.06);
+  overflow:hidden;display:flex;height:620px;position:relative}
+
+/* Titlebar */
+.titlebar{position:absolute;top:0;left:0;right:0;height:38px;background:linear-gradient(180deg,#f8f8f8,#e8e8e8);
+  border-bottom:1px solid #d4d4d4;display:flex;align-items:center;padding:0 14px;z-index:10}
+.dot{width:12px;height:12px;border-radius:50%;margin-right:8px}
+.dot-r{background:#ff5f57}.dot-y{background:#febc2e}.dot-g{background:#28c840}
+.titlebar-title{flex:1;text-align:center;font-size:13px;color:var(--gray-500);font-weight:500}
+
+/* Sidebar */
+.sidebar{width:250px;min-width:250px;background:var(--bg-sidebar);padding:52px 12px 12px;
+  display:flex;flex-direction:column;border-right:1px solid #d4d4d4}
+.sidebar-header{display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin-bottom:12px}
+.sidebar-header h2{font-size:14px;font-weight:600;color:var(--gray-800)}
+.btn-add{width:26px;height:26px;border-radius:6px;border:none;background:var(--accent);color:#fff;
+  font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.search-box{width:100%;padding:7px 10px;border-radius:6px;border:1px solid var(--gray-300);
+  font-size:13px;background:#fff;outline:none;margin-bottom:10px}
+.search-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,.15)}
+
+.client-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.client-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;
+  transition:background .12s}
+.client-item:hover{background:rgba(0,0,0,.06)}
+.client-item.active{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:600;color:#fff;flex-shrink:0}
+.client-item .name{font-size:13px;font-weight:500;color:var(--gray-800)}
+.client-item .stage{font-size:11px;padding:2px 6px;border-radius:4px;font-weight:500}
+
+.sidebar-footer{border-top:1px solid var(--gray-300);padding-top:10px;margin-top:8px;
+  display:flex;flex-direction:column;gap:2px}
+.sidebar-footer .nav-btn{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;
+  font-size:13px;color:var(--gray-600);cursor:pointer;transition:background .12s;border:none;background:none;width:100%;text-align:left}
+.sidebar-footer .nav-btn:hover{background:rgba(0,0,0,.06)}
+
+/* Main Content */
+.main-content{flex:1;padding:52px 0 0;display:flex;flex-direction:column;overflow:hidden}
+.main-header{padding:16px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.main-header h1{font-size:20px;font-weight:700;color:var(--gray-900)}
+.main-header .actions{display:flex;gap:8px}
+.main-header .actions button{padding:6px 14px;border-radius:6px;border:1px solid var(--gray-300);
+  background:#fff;font-size:13px;cursor:pointer;color:var(--gray-700);font-weight:500;transition:all .12s}
+.main-header .actions button:hover{border-color:var(--accent);color:var(--accent)}
+.main-header .actions .primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.main-header .actions .primary:hover{background:var(--accent-dark)}
+
+/* Tabs */
+.tabs{display:flex;gap:0;padding:0 24px;margin-top:16px;border-bottom:1px solid var(--gray-200)}
+.tab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--gray-500);cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .15s;position:relative;bottom:-1px}
+.tab:hover{color:var(--gray-700)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* Tab Panels */
+.tab-panels{flex:1;overflow-y:auto;padding:20px 24px}
+
+/* Profile panel */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;font-weight:500;color:var(--gray-500)}
+.field .value{font-size:14px;color:var(--gray-800);padding:8px 10px;background:var(--gray-50);
+  border-radius:6px;border:1px solid var(--gray-200)}
+.field.full{grid-column:1/-1}
+.need-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.need-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;
+  font-size:12px;font-weight:500}
+.need-tag.active{background:#dbeafe;color:#2563eb}
+.need-tag.closed{background:#d1fae5;color:#059669}
+
+/* Meeting panel */
+.meeting-card{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);
+  padding:16px;margin-bottom:12px;cursor:pointer;transition:border-color .15s}
+.meeting-card:hover{border-color:var(--accent)}
+.meeting-card .meta{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.meeting-card .meta .type{font-size:11px;padding:2px 8px;border-radius:4px;background:#ede9fe;color:#7c3aed;font-weight:500}
+.meeting-card .meta .date{font-size:12px;color:var(--gray-400)}
+.meeting-card h4{font-size:14px;font-weight:600;margin-bottom:6px}
+.meeting-card p{font-size:13px;color:var(--gray-500);line-height:1.5}
+.meeting-card .actions-row{display:flex;gap:6px;margin-top:10px}
+.meeting-card .action-tag{font-size:11px;padding:3px 8px;border-radius:4px;
+  background:#fef3c7;color:#92400e;font-weight:500}
+
+/* Material panel */
+.material-card{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);
+  padding:16px;margin-bottom:12px}
+.material-card .mat-type{font-size:11px;padding:2px 8px;border-radius:4px;background:#dbeafe;
+  color:#2563eb;font-weight:500;margin-bottom:8px;display:inline-block}
+.material-card h4{font-size:14px;font-weight:600;margin-bottom:8px}
+.material-card .mat-body{font-size:13px;color:var(--gray-600);line-height:1.7}
+.material-card .mat-body ul{margin-left:16px;margin-top:4px}
+.material-card .mat-body li{margin-bottom:2px}
+
+/* AI Processing overlay */
+.ai-overlay{position:absolute;top:38px;left:250px;right:0;bottom:0;background:rgba(255,255,255,.92);
+  backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:20;opacity:0;pointer-events:none;transition:opacity .3s}
+.ai-overlay.show{opacity:1;pointer-events:auto}
+.ai-spinner{width:40px;height:40px;border:3px solid var(--gray-200);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-overlay .ai-text{font-size:15px;color:var(--gray-600);font-weight:500}
+.ai-overlay .ai-sub{font-size:13px;color:var(--gray-400);margin-top:6px}
+
+/* ── Tech Stack ───────────────────────────────────────────────────────── */
+.tech-section{background:#fafbfc;padding:80px 24px}
+.tech-wrap{max-width:1100px;margin:0 auto;text-align:center}
+.tech-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin-top:32px}
+.tech-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;
+  background:#fff;border:1px solid var(--gray-200);border-radius:10px;font-size:14px;
+  font-weight:500;color:var(--gray-700);transition:transform .15s,box-shadow .15s}
+.tech-pill:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.tech-pill .tech-icon{font-size:18px}
+
+/* ── Architecture ─────────────────────────────────────────────────────── */
+.arch-diagram{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;margin-top:32px}
+.arch-col{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);
+  padding:24px;min-width:200px;flex:1;max-width:300px}
+.arch-col h4{font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;
+  letter-spacing:.06em;margin-bottom:12px}
+.arch-col ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.arch-col li{font-size:14px;color:var(--gray-600);padding:6px 0;border-bottom:1px solid var(--gray-100)}
+.arch-col li:last-child{border-bottom:none}
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+.site-footer{background:var(--navy);color:rgba(255,255,255,.6);text-align:center;padding:40px 24px}
+.site-footer .name{font-size:18px;font-weight:600;color:#fff;margin-bottom:8px}
+.site-footer p{font-size:13px;line-height:1.8}
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media(max-width:768px){
+  .mockup-frame{height:auto;flex-direction:column}
+  .sidebar{width:100%;min-width:100%;max-height:300px;border-right:none;border-bottom:1px solid #d4d4d4}
+  .profile-grid{grid-template-columns:1fr}
+  .features{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-badge"><span class="dot"></span> Side Project by Damond Dong</div>
+  <h1>Broker <span>AI</span></h1>
+  <p class="subtitle">
+    一款面向保险经纪人的 AI 桌面助手<br>
+    用 AI 重新定义展业流程 —— 让 AI 做 AI 能做的，人只做人该做的
+  </p>
+  <button class="hero-cta" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'})">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
+    查看交互 Demo
+  </button>
+  <div class="scroll-hint">
+    <span>向下滚动了解更多</span>
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══════════════════════════════════════════════════════ -->
+<section class="section" id="features">
+  <div class="section-label">Core Features</div>
+  <div class="section-title">六大核心模块</div>
+  <p class="section-desc">从客户管理到 AI 辅助决策，覆盖保险经纪人展业全流程</p>
+  <div class="features">
+    <div class="feature-card">
+      <div class="feature-icon ic-crm">&#x1F4CB;</div>
+      <h3>客户 CRM</h3>
+      <p>完整的客户画像管理，支持销售阶段追踪、需求标签、搜索与筛选。从 prospect 到 annual review，8 阶段全覆盖。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon ic-ai">&#x1F916;</div>
+      <h3>会谈 AI 处理</h3>
+      <p>录入会谈笔记后，AI 自动生成摘要、提取待办、识别信息缺口、建议下一步动作，并更新客户画像。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon ic-mat">&#x1F4DD;</div>
+      <h3>销售物料生成</h3>
+      <p>AI 根据客户画像和当前阶段，个性化生成需求分析报告、产品对比表、话术模板等物料，支持追问优化。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon ic-pol">&#x1F4C4;</div>
+      <h3>保单台账</h3>
+      <p>24 字段完整保单录入，支持客户维度和全局维度双视图，按公司、产品类别、币种灵活筛选。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon ic-task">&#x2705;</div>
+      <h3>智能待办</h3>
+      <p>AI 会谈处理自动提取 action items 同步到待办模块。支持优先级、逾期提醒、客户维度和全局维度。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon ic-set">&#x2699;&#xFE0F;</div>
+      <h3>多 AI 供应商</h3>
+      <p>支持 Claude (Anthropic)、MiniMax、Gemini 三选一，一键切换。主力任务与快速任务自动分配不同模型。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ APP MOCKUP ═════════════════════════════════════════════════════ -->
+<section class="mockup-section" id="demo">
+  <div class="mockup-wrap">
+    <div style="text-align:center;margin-bottom:40px">
+      <div class="section-label">Interactive Demo</div>
+      <div class="section-title">应用界面预览</div>
+      <p class="section-desc" style="margin:12px auto 0">点击左侧客户、切换 Tab，体验真实交互</p>
+    </div>
+
+    <div class="mockup-frame" id="appFrame">
+      <!-- Titlebar -->
+      <div class="titlebar">
+        <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+        <span class="titlebar-title">经纪人AI助手 — Broker AI</span>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <h2>客户列表</h2>
+          <button class="btn-add" title="新建客户">+</button>
+        </div>
+        <input class="search-box" placeholder="搜索客户..." id="searchBox">
+        <div class="client-list" id="clientList"></div>
+        <div class="sidebar-footer">
+          <button class="nav-btn">&#x1F4CB; 保单台账</button>
+          <button class="nav-btn">&#x2705; 全局待办</button>
+          <button class="nav-btn">&#x2699;&#xFE0F; 设置</button>
+        </div>
+      </div>
+
+      <!-- Main -->
+      <div class="main-content" id="mainContent">
+        <div class="main-header" id="mainHeader">
+          <h1 id="clientName">王小明</h1>
+          <div class="actions">
+            <button onclick="showAI()">&#x1F4AC; 会前准备</button>
+            <button class="primary" onclick="showAI()">&#x2728; 处理会谈</button>
+          </div>
+        </div>
+        <div class="tabs" id="tabBar">
+          <div class="tab active" data-tab="profile">画像</div>
+          <div class="tab" data-tab="meetings">会谈</div>
+          <div class="tab" data-tab="materials">物料</div>
+          <div class="tab" data-tab="policies">保单</div>
+          <div class="tab" data-tab="tasks">待办</div>
+        </div>
+        <div class="tab-panels" id="tabPanels"></div>
+      </div>
+
+      <!-- AI overlay -->
+      <div class="ai-overlay" id="aiOverlay">
+        <div class="ai-spinner"></div>
+        <div class="ai-text">AI 正在分析会谈内容...</div>
+        <div class="ai-sub">Claude Sonnet 4.6 处理中</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TECH STACK ═════════════════════════════════════════════════════ -->
+<section class="tech-section">
+  <div class="tech-wrap">
+    <div class="section-label">Tech Stack</div>
+    <div class="section-title">技术架构</div>
+    <p class="section-desc" style="margin:12px auto 32px">桌面级应用，本地数据存储，AI 能力云端调用</p>
+    <div class="arch-diagram">
+      <div class="arch-col">
+        <h4>&#x1F5A5; 前端</h4>
+        <ul>
+          <li>Electron 32 (桌面框架)</li>
+          <li>React 18 + TypeScript</li>
+          <li>Tailwind CSS</li>
+          <li>electron-vite (构建)</li>
+        </ul>
+      </div>
+      <div class="arch-col">
+        <h4>&#x1F4BE; 数据</h4>
+        <ul>
+          <li>SQLite (better-sqlite3)</li>
+          <li>WAL 模式 (高并发)</li>
+          <li>7 张表 (clients, profiles, meetings...)</li>
+          <li>本地持久化</li>
+        </ul>
+      </div>
+      <div class="arch-col">
+        <h4>&#x1F916; AI 层</h4>
+        <ul>
+          <li>Claude API (Anthropic SDK)</li>
+          <li>OpenAI 兼容 (MiniMax/Gemini)</li>
+          <li>主力 + 快速任务分模型</li>
+          <li>Streaming 输出</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tech-grid" style="margin-top:40px">
+      <div class="tech-pill"><span class="tech-icon">&#x269B;&#xFE0F;</span> React</div>
+      <div class="tech-pill"><span class="tech-icon">&#x1F1F9;</span> TypeScript</div>
+      <div class="tech-pill"><span class="tech-icon">&#x26A1;</span> Electron</div>
+      <div class="tech-pill"><span class="tech-icon">&#x1F3A8;</span> Tailwind CSS</div>
+      <div class="tech-pill"><span class="tech-icon">&#x1F4E6;</span> SQLite</div>
+      <div class="tech-pill"><span class="tech-icon">&#x1F9E0;</span> Claude API</div>
+      <div class="tech-pill"><span class="tech-icon">&#x1F680;</span> electron-vite</div>
+      <div class="tech-pill"><span class="tech-icon">&#x1F4E6;</span> electron-builder</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DESIGN PHILOSOPHY ═════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-label">Design Philosophy</div>
+  <div class="section-title">AI-Driven Agent 模型</div>
+  <p class="section-desc">不是"给经纪人一个 AI 聊天窗口"，而是让 AI 深度嵌入展业 SOP 的每一步</p>
+  <div class="features" style="grid-template-columns:1fr 1fr">
+    <div class="feature-card" style="border-left:3px solid var(--accent)">
+      <h3>&#x1F4A1; 核心洞察</h3>
+      <p style="font-size:15px;line-height:1.8">KYC 的本质是<strong>非结构化数据的结构化提炼</strong>。通话记录、微信聊天、面谈笔记——这些都是数字资产。AI 擅长从中提取结构化信息（客户画像、需求标签、风险偏好），而人擅长建立信任和做决策。<br><br>
+      <strong>"让 AI 做 AI 能做的，人只做人该做的"</strong>——这就是效率最大化的关键路径。</p>
+    </div>
+    <div class="feature-card" style="border-left:3px solid var(--purple)">
+      <h3>&#x1F504; 工作流</h3>
+      <p style="font-size:15px;line-height:1.8">
+        <strong>1. 会前</strong> — AI 根据客户画像生成提问清单和谈话要点<br>
+        <strong>2. 会中</strong> — 经纪人专注对话，简单记录要点<br>
+        <strong>3. 会后</strong> — AI 处理笔记：生成摘要、更新画像、提取待办、建议下一步<br>
+        <strong>4. 跟进</strong> — AI 生成个性化销售物料，经纪人微调后发送<br><br>
+        每一步 AI 都在主动推送，而非被动等待。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═════════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="name">Broker AI</div>
+  <p>
+    Built by Damond Dong (董梦皓)<br>
+    Powered by Claude API (Anthropic) &middot; Electron + React + TypeScript<br>
+    damonddong@qq.com &middot; 13761419747
+  </p>
+</footer>
+
+<!-- ═══ SCRIPT ═════════════════════════════════════════════════════════ -->
+<script>
+// ── Demo Data ─────────────────────────────────────────────────────────
+const clients = [
+  { name: "\u738B\u5C0F\u660E", stage: "proposal", stageLabel: "\u65B9\u6848\u8BBE\u8BA1", color: "#a855f7",
+    phone: "138-0001-0001", wechat: "wangxm_sh", birthday: "1988-03-15",
+    relationship: "\u670B\u53CB\u8F6C\u4ECB\u7ECD", insurance: "\u4E24\u8005", referrer: "\u674E\u5A77",
+    age: "36", gender: "\u7537", occupation: "\u4E92\u8054\u7F51\u4EA7\u54C1\u7ECF\u7406", company: "\u5B57\u8282\u8DF3\u52A8",
+    city: "\u4E0A\u6D77", income: "80-100\u4E07", budget: "5-8\u4E07/\u5E74",
+    needs: [{tag:"\u91CD\u75BE\u9669",status:"active"},{tag:"\u5B50\u5973\u6559\u80B2\u91D1",status:"active"},{tag:"\u533B\u7597\u9669",status:"closed"}],
+    meetings: [
+      { type: "\u9762\u8C08", date: "2025-04-10", title: "\u7B2C\u4E8C\u6B21\u9762\u8C08\u2014\u2014\u9700\u6C42\u786E\u8BA4",
+        summary: "\u5BA2\u6237\u786E\u8BA4\u91CD\u75BE\u9669\u4E3A\u9996\u8981\u9700\u6C42\uFF0C\u9884\u7B97 5-8 \u4E07/\u5E74\uFF0C\u5BF9\u9999\u6E2F\u4FDD\u9669\u611F\u5174\u8DA3\u4F46\u62C5\u5FC3\u7406\u8D54\u4FBF\u5229\u6027\u3002\u5983\u5B50\u5373\u5C06\u751F\u4E8C\u80CE\uFF0C\u5B50\u5973\u6559\u80B2\u91D1\u4E5F\u9700\u8981\u89C4\u5212\u3002",
+        actions: ["\u51C6\u5907\u9999\u6E2F vs \u5185\u5730\u91CD\u75BE\u9669\u5BF9\u6BD4\u8868", "\u53D1\u9001\u7406\u8D54\u6D41\u7A0B\u8BF4\u660E", "\u4E0B\u5468\u4E09\u8DDF\u8FDB"]
+      },
+      { type: "\u7535\u8BDD", date: "2025-03-28", title: "\u521D\u6B21\u63A5\u89E6\u2014\u2014\u9700\u6C42\u6478\u5E95",
+        summary: "\u674E\u5A77\u8F6C\u4ECB\u7ECD\uFF0C\u5BA2\u6237 36 \u5C81\u7537\u6027\uFF0C\u4E92\u8054\u7F51\u884C\u4E1A\uFF0C\u6709\u4E00\u5B9A\u4FDD\u9669\u610F\u8BC6\u4F46\u5C1A\u672A\u8D2D\u4E70\u8FC7\u91CD\u75BE\u9669\u3002\u5BB6\u5EAD\u6536\u5165\u7A33\u5B9A\uFF0C\u6709\u8D2D\u623F\u8D37\u6B3E\u3002",
+        actions: ["\u53D1\u9001\u516C\u53F8\u4ECB\u7ECD", "\u7EA6\u9762\u8C08\u65F6\u95F4"]
+      }
+    ],
+    materials: [
+      { type: "\u4EA7\u54C1\u5BF9\u6BD4\u8868", title: "\u9999\u6E2F vs \u5185\u5730\u91CD\u75BE\u9669\u5BF9\u6BD4\u5206\u6790",
+        body: "<strong>\u9999\u6E2F\u91CD\u75BE\u9669\u4F18\u52BF</strong><ul><li>\u4FDD\u989D\u66F4\u9AD8\uFF0C\u540C\u7B49\u4FDD\u8D39\u53EF\u83B7\u5F97 30-50% \u66F4\u9AD8\u4FDD\u989D</li><li>\u591A\u6B21\u7406\u8D54\uFF0C\u90E8\u5206\u4EA7\u54C1\u652F\u6301\u591A\u6B21\u7406\u8D54\u81F3 500%</li><li>\u7F8E\u5143/\u6E2F\u5E01\u8BA1\u4EF7\uFF0C\u5206\u6563\u6C47\u7387\u98CE\u9669</li></ul><strong>\u5185\u5730\u91CD\u75BE\u9669\u4F18\u52BF</strong><ul><li>\u7406\u8D54\u6D41\u7A0B\u66F4\u4FBF\u6377\uFF0C\u65E0\u9700\u8D74\u6E2F</li><li>\u4EBA\u6C11\u5E01\u7ED3\u7B97\uFF0C\u65E0\u6C47\u7387\u98CE\u9669</li><li>\u76D1\u7BA1\u900F\u660E\uFF0C\u4FE1\u606F\u62AB\u9732\u5145\u5206</li></ul>" }
+    ]
+  },
+  { name: "\u5F20\u7FE0\u82B1", stage: "needs_analysis", stageLabel: "\u9700\u6C42\u5206\u6790", color: "#6366f1",
+    phone: "139-0002-0002", wechat: "zhangch_sz", birthday: "1975-08-22",
+    relationship: "\u964C\u751F\u5F00\u62D3", insurance: "\u6E2F\u9669", referrer: "",
+    age: "49", gender: "\u5973", occupation: "\u4F01\u4E1A\u4E3B", company: "\u81EA\u8425\u8D38\u6613\u516C\u53F8",
+    city: "\u6DF1\u5733", income: "200\u4E07+", budget: "15-20\u4E07/\u5E74",
+    needs: [{tag:"\u8D44\u4EA7\u4F20\u627F",status:"active"},{tag:"\u9AD8\u7AEF\u533B\u7597",status:"active"}],
+    meetings: [
+      { type: "\u5FAE\u4FE1", date: "2025-04-12", title: "\u5FAE\u4FE1\u6C9F\u901A\u2014\u2014\u8D44\u4EA7\u914D\u7F6E\u610F\u5411",
+        summary: "\u5BA2\u6237\u5BF9\u9999\u6E2F\u4FDD\u9669\u7684\u8D44\u4EA7\u4F20\u627F\u529F\u80FD\u611F\u5174\u8DA3\uFF0C\u5E0C\u671B\u4E86\u89E3\u4FE1\u6258+\u4FDD\u9669\u7EC4\u5408\u65B9\u6848\u3002\u5DF2\u6709\u5185\u5730\u767E\u4E07\u533B\u7597\uFF0C\u5E0C\u671B\u5347\u7EA7\u9AD8\u7AEF\u533B\u7597\u3002",
+        actions: ["\u51C6\u5907\u4FE1\u6258+\u4FDD\u9669\u65B9\u6848\u8BF4\u660E", "\u7EA6\u6DF1\u5733\u9762\u8C08"]
+      }
+    ],
+    materials: []
+  },
+  { name: "\u8D75\u5FD7\u5F3A", stage: "closed", stageLabel: "\u5DF2\u6210\u4EA4", color: "#22c55e",
+    phone: "136-0003-0003", wechat: "zhaozhq", birthday: "1992-11-08",
+    relationship: "\u670B\u53CB", insurance: "\u9646\u9669", referrer: "",
+    age: "32", gender: "\u7537", occupation: "\u8F6F\u4EF6\u5DE5\u7A0B\u5E08", company: "\u7F8E\u56E2",
+    city: "\u4E0A\u6D77", income: "50-70\u4E07", budget: "3\u4E07/\u5E74",
+    needs: [{tag:"\u91CD\u75BE\u9669",status:"closed"},{tag:"\u610F\u5916\u9669",status:"closed"}],
+    meetings: [],
+    materials: []
+  },
+  { name: "\u6797\u6653\u96EA", stage: "hesitating", stageLabel: "\u72B9\u8C6B\u4E2D", color: "#f59e0b",
+    phone: "158-0004-0004", wechat: "linxiaoxue_bj", birthday: "1985-06-18",
+    relationship: "\u8F6C\u4ECB\u7ECD", insurance: "\u4E24\u8005", referrer: "\u8D75\u5FD7\u5F3A",
+    age: "39", gender: "\u5973", occupation: "\u5F8B\u5E08", company: "\u91D1\u675C\u5F8B\u5E08\u4E8B\u52A1\u6240",
+    city: "\u5317\u4EAC", income: "100-150\u4E07", budget: "8-12\u4E07/\u5E74",
+    needs: [{tag:"\u5B9A\u671F\u5BFF\u9669",status:"active"},{tag:"\u5B50\u5973\u6559\u80B2\u91D1",status:"active"},{tag:"\u517B\u8001\u5E74\u91D1",status:"active"}],
+    meetings: [],
+    materials: []
+  }
+];
+
+let currentClient = 0;
+let currentTab = "profile";
+
+// ── Render Sidebar ────────────────────────────────────────────────────
+function renderSidebar(filter = "") {
+  const list = document.getElementById("clientList");
+  list.innerHTML = "";
+  clients.forEach((c, i) => {
+    if (filter && !c.name.includes(filter)) return;
+    const el = document.createElement("div");
+    el.className = "client-item" + (i === currentClient ? " active" : "");
+    el.innerHTML = `
+      <div class="avatar" style="background:${c.color}">${c.name[0]}</div>
+      <div>
+        <div class="name">${c.name}</div>
+        <span class="stage" style="background:${c.color}20;color:${c.color}">${c.stageLabel}</span>
+      </div>`;
+    el.onclick = () => { currentClient = i; currentTab = "profile"; render(); };
+    list.appendChild(el);
+  });
+}
+
+// ── Render Tabs ───────────────────────────────────────────────────────
+function renderTabs() {
+  document.querySelectorAll(".tab").forEach(t => {
+    t.classList.toggle("active", t.dataset.tab === currentTab);
+  });
+}
+
+// ── Render Panel ──────────────────────────────────────────────────────
+function renderPanel() {
+  const c = clients[currentClient];
+  document.getElementById("clientName").textContent = c.name;
+  const panel = document.getElementById("tabPanels");
+
+  if (currentTab === "profile") {
+    panel.innerHTML = `
+      <div class="profile-grid">
+        <div class="field"><label>\u59D3\u540D</label><div class="value">${c.name}</div></div>
+        <div class="field"><label>\u7535\u8BDD</label><div class="value">${c.phone}</div></div>
+        <div class="field"><label>\u5FAE\u4FE1</label><div class="value">${c.wechat}</div></div>
+        <div class="field"><label>\u751F\u65E5</label><div class="value">${c.birthday}</div></div>
+        <div class="field"><label>\u5173\u7CFB</label><div class="value">${c.relationship}</div></div>
+        <div class="field"><label>\u4ECB\u7ECD\u4EBA</label><div class="value">${c.referrer || "\u2014"}</div></div>
+        <div class="field"><label>\u9669\u79CD\u504F\u597D</label><div class="value">${c.insurance}</div></div>
+        <div class="field"><label>\u9500\u552E\u9636\u6BB5</label><div class="value" style="background:${c.color}15;border-color:${c.color}40;color:${c.color}">${c.stageLabel}</div></div>
+      </div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-200)">
+        <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px">\u5BA2\u6237\u753B\u50CF</div>
+        <div class="profile-grid">
+          <div class="field"><label>\u5E74\u9F84</label><div class="value">${c.age}</div></div>
+          <div class="field"><label>\u6027\u522B</label><div class="value">${c.gender}</div></div>
+          <div class="field"><label>\u804C\u4E1A</label><div class="value">${c.occupation}</div></div>
+          <div class="field"><label>\u516C\u53F8</label><div class="value">${c.company}</div></div>
+          <div class="field"><label>\u57CE\u5E02</label><div class="value">${c.city}</div></div>
+          <div class="field"><label>\u5E74\u6536\u5165</label><div class="value">${c.income}</div></div>
+          <div class="field"><label>\u4FDD\u8D39\u9884\u7B97</label><div class="value">${c.budget}</div></div>
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <div style="font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px">\u9700\u6C42\u6807\u7B7E</div>
+        <div class="need-tags">
+          ${c.needs.map(n => `<span class="need-tag ${n.status}">${n.status === "closed" ? "\u2713 " : ""}${n.tag}</span>`).join("")}
+        </div>
+      </div>`;
+  }
+  else if (currentTab === "meetings") {
+    if (!c.meetings.length) {
+      panel.innerHTML = `<div style="text-align:center;padding:60px 0;color:var(--gray-400)"><div style="font-size:32px;margin-bottom:8px">&#x1F4AC;</div>\u6682\u65E0\u4F1A\u8C08\u8BB0\u5F55</div>`;
+      return;
+    }
+    panel.innerHTML = c.meetings.map(m => `
+      <div class="meeting-card">
+        <div class="meta">
+          <span class="type">${m.type}</span>
+          <span class="date">${m.date}</span>
+        </div>
+        <h4>${m.title}</h4>
+        <p>${m.summary}</p>
+        ${m.actions ? `<div class="actions-row">${m.actions.map(a => `<span class="action-tag">\u2192 ${a}</span>`).join("")}</div>` : ""}
+      </div>`).join("");
+  }
+  else if (currentTab === "materials") {
+    if (!c.materials.length) {
+      panel.innerHTML = `<div style="text-align:center;padding:60px 0;color:var(--gray-400)"><div style="font-size:32px;margin-bottom:8px">&#x1F4DD;</div>\u6682\u65E0\u9500\u552E\u7269\u6599<br><span style="font-size:13px">\u70B9\u51FB\u201C\u2728 \u5904\u7406\u4F1A\u8C08\u201D\u751F\u6210</span></div>`;
+      return;
+    }
+    panel.innerHTML = c.materials.map(m => `
+      <div class="material-card">
+        <span class="mat-type">${m.type}</span>
+        <h4>${m.title}</h4>
+        <div class="mat-body">${m.body}</div>
+      </div>`).join("");
+  }
+  else if (currentTab === "policies") {
+    panel.innerHTML = `<div style="text-align:center;padding:60px 0;color:var(--gray-400)"><div style="font-size:32px;margin-bottom:8px">&#x1F4C4;</div>\u6682\u65E0\u4FDD\u5355\u8BB0\u5F55<br><span style="font-size:13px">\u70B9\u51FB\u201C+ \u65B0\u5EFA\u4FDD\u5355\u201D\u5F00\u59CB\u5F55\u5165</span></div>`;
+  }
+  else if (currentTab === "tasks") {
+    panel.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px">
+          <input type="checkbox" style="accent-color:var(--accent)">
+          <span style="flex:1;font-size:14px">\u51C6\u5907\u9999\u6E2F vs \u5185\u5730\u91CD\u75BE\u9669\u5BF9\u6BD4\u8868</span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#fef2f2;color:#dc2626;font-weight:500">\u9AD8</span>
+          <span style="font-size:12px;color:var(--gray-400)">04-15</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px">
+          <input type="checkbox" style="accent-color:var(--accent)">
+          <span style="flex:1;font-size:14px">\u53D1\u9001\u7406\u8D54\u6D41\u7A0B\u8BF4\u660E\u6587\u6863</span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:#fefce8;color:#a16207;font-weight:500">\u4E2D</span>
+          <span style="font-size:12px;color:var(--gray-400)">04-16</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;opacity:.5">
+          <input type="checkbox" checked style="accent-color:var(--accent)">
+          <span style="flex:1;font-size:14px;text-decoration:line-through">\u53D1\u9001\u516C\u53F8\u4ECB\u7ECD\u8D44\u6599</span>
+          <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--gray-100);color:var(--gray-500);font-weight:500">\u4F4E</span>
+          <span style="font-size:12px;color:var(--gray-400)">04-10 \u2713</span>
+        </div>
+      </div>`;
+  }
+}
+
+// ── AI Overlay ────────────────────────────────────────────────────────
+function showAI() {
+  const overlay = document.getElementById("aiOverlay");
+  overlay.classList.add("show");
+  setTimeout(() => overlay.classList.remove("show"), 2500);
+}
+
+// ── Render All ────────────────────────────────────────────────────────
+function render() {
+  renderSidebar(document.getElementById("searchBox").value);
+  renderTabs();
+  renderPanel();
+}
+
+// ── Events ────────────────────────────────────────────────────────────
+document.getElementById("tabBar").addEventListener("click", e => {
+  if (e.target.dataset.tab) { currentTab = e.target.dataset.tab; render(); }
+});
+document.getElementById("searchBox").addEventListener("input", e => renderSidebar(e.target.value));
+
+// ── Init ──────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
